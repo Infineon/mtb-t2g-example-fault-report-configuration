@@ -1,6 +1,6 @@
 /**********************************************************************************************************************
  * \file main.c
- * \copyright Copyright (C) Infineon Technologies AG 2019
+ * \copyright Copyright (C) Infineon Technologies AG 2024
  *
  * Use of this file is subject to the terms of use agreed between (i) you or the company in which ordinary course of
  * business you are acting and (ii) Infineon Technologies AG or its licensees. If and as long as no such terms of use
@@ -27,10 +27,9 @@
 /*********************************************************************************************************************/
 /*-----------------------------------------------------Includes------------------------------------------------------*/
 /*********************************************************************************************************************/
-#include "cyhal.h"
+
 #include "cybsp.h"
-#include "cy_sysfault.h"
-#include "cy_sysint.h"
+#include "cy_pdl.h"
 #include "cy_retarget_io.h"
 
 /*********************************************************************************************************************/
@@ -97,7 +96,7 @@ const cy_stc_SysFault_t FAULT_CFG_RESET =
 /* Configure Interrupt for Fault structure */
 const cy_stc_sysint_t IRQ_CFG =
 {
-    .intrSrc = ((NvicMux3_IRQn << 16) | cpuss_interrupts_fault_0_IRQn),
+    .intrSrc = ((NvicMux3_IRQn << CY_SYSINT_INTRSRC_MUXIRQ_SHIFT) | cpuss_interrupts_fault_0_IRQn),
     .intrPriority = 2UL
 };
 
@@ -145,17 +144,17 @@ void handle_Fault_IRQ(void)
     }
 
     /* Blink LED 3 times */
-    cyhal_gpio_toggle(CYBSP_USER_LED1);
-    cyhal_system_delay_ms(LED_BLINK_INTERVAL_MS);
-    cyhal_gpio_toggle(CYBSP_USER_LED1);
-    cyhal_system_delay_ms(LED_BLINK_INTERVAL_MS);
-    cyhal_gpio_toggle(CYBSP_USER_LED1);
-    cyhal_system_delay_ms(LED_BLINK_INTERVAL_MS);
-    cyhal_gpio_toggle(CYBSP_USER_LED1);
-    cyhal_system_delay_ms(LED_BLINK_INTERVAL_MS);
-    cyhal_gpio_toggle(CYBSP_USER_LED1);
-    cyhal_system_delay_ms(LED_BLINK_INTERVAL_MS);
-    cyhal_gpio_toggle(CYBSP_USER_LED1);
+    Cy_GPIO_Inv(CYBSP_LED1_PORT, CYBSP_LED1_PIN);
+    Cy_SysLib_Delay(LED_BLINK_INTERVAL_MS);      
+    Cy_GPIO_Inv(CYBSP_LED1_PORT, CYBSP_LED1_PIN);
+    Cy_SysLib_Delay(LED_BLINK_INTERVAL_MS);      
+    Cy_GPIO_Inv(CYBSP_LED1_PORT, CYBSP_LED1_PIN);
+    Cy_SysLib_Delay(LED_BLINK_INTERVAL_MS);      
+    Cy_GPIO_Inv(CYBSP_LED1_PORT, CYBSP_LED1_PIN);
+    Cy_SysLib_Delay(LED_BLINK_INTERVAL_MS);      
+    Cy_GPIO_Inv(CYBSP_LED1_PORT, CYBSP_LED1_PIN);
+    Cy_SysLib_Delay(LED_BLINK_INTERVAL_MS);      
+    Cy_GPIO_Inv(CYBSP_LED1_PORT, CYBSP_LED1_PIN);
 
     /* Clear Interrupt flag */
     Cy_SysFault_ClearInterrupt(FAULT_STRUCT0);
@@ -382,7 +381,8 @@ void inject_ECC_SRAM0_ECC_error(uint64_t *ramAddr, InjectType injectVal, InjectT
 
     /* SRAM 0 data write to set specified parity */
     *ramAddr = ramVal;
-    cyhal_system_delay_ms(SLEEP_INTERVAL_MS);
+    
+    Cy_SysLib_Delay(SLEEP_INTERVAL_MS);
 
     /* Reads SRAM so that checks are performed with the set parity */
     ramVal = *ramAddr;
@@ -426,20 +426,14 @@ int main(void)
 
     /* Enable global interrupts */
     __enable_irq();
-
+   
     /* Initialize retarget-io to use the debug UART port */
-    if (cy_retarget_io_init(CYBSP_DEBUG_UART_TX, CYBSP_DEBUG_UART_RX,
-                                  CY_RETARGET_IO_BAUDRATE) != CY_RSLT_SUCCESS)
-    {
-        CY_ASSERT(0);
-    }
+    Cy_SCB_UART_Init(UART_HW, &UART_config, NULL);
+    Cy_SCB_UART_Enable(UART_HW);
+    cy_retarget_io_init(UART_HW);
 
     /* Initialize the User LED */
-    if (cyhal_gpio_init(CYBSP_USER_LED1, CYHAL_GPIO_DIR_OUTPUT,
-                              CYHAL_GPIO_DRIVE_STRONG, CYBSP_LED_STATE_OFF) != CY_RSLT_SUCCESS)
-    {
-        CY_ASSERT(0);
-    }
+    Cy_GPIO_Pin_Init(CYBSP_USER_LED_PORT, CYBSP_USER_LED_NUM, &CYBSP_LED1_config);
 
     /* \x1b[2J\x1b[;H - ANSI ESC sequence for clear screen */
     printf("\x1b[2J\x1b[;H");
@@ -469,7 +463,9 @@ int main(void)
     for (;;)
     {
         /* Check if 'i' key or 'r' key was pressed */
-        if (cyhal_uart_getc(&cy_retarget_io_uart_obj, &uartReadValue, 1) == CY_RSLT_SUCCESS)
+        uartReadValue = Cy_SCB_UART_Get(UART_HW);
+               
+        if(uartReadValue != 0xFF)
         {
             if (uartReadValue == 'i')
             {
@@ -492,7 +488,8 @@ int main(void)
                 generate_ECC_SRAM0_correctable_error_by_parity();
             }
         }
-        cyhal_system_delay_ms(SLEEP_INTERVAL_MS);
+        
+        Cy_SysLib_Delay(SLEEP_INTERVAL_MS);
     }
 }
 

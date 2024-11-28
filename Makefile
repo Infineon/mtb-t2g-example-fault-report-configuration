@@ -40,7 +40,7 @@ MTB_TYPE=COMBINED
 # To change the target, it is recommended to use the Library manager
 # ('make library-manager' from command line), which will also update Eclipse IDE launch
 # configurations.
-TARGET=APP_KIT_T2G-B-H_EVK
+TARGET=APP_KIT_T2G_C-2D-6M_LITE
 
 # Name of application (used to derive name of final linked file).
 #
