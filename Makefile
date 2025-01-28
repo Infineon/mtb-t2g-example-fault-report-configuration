@@ -7,7 +7,7 @@
 #
 ################################################################################
 # \copyright
-# Copyright 2018-2022, Cypress Semiconductor Corporation (an Infineon company)
+# Copyright 2018-2024, Cypress Semiconductor Corporation (an Infineon company)
 # SPDX-License-Identifier: Apache-2.0
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +46,7 @@ TARGET=APP_KIT_T2G_C-2D-6M_LITE
 #
 # If APPNAME is edited, ensure to update or regenerate launch
 # configurations for your IDE.
-APPNAME=mtb-t2g-example-fault-report-configuration
+APPNAME=mtb-example-empty-app
 
 # Name of toolchain to use. Options include:
 #
@@ -162,11 +162,13 @@ CY_GETLIBS_SHARED_PATH=../
 #
 CY_GETLIBS_SHARED_NAME=mtb_shared
 
-# Absolute path to the compiler's "bin" directory.
+# Absolute path to the compiler's "bin" directory. The variable name depends on the
+# toolchain used for the build. Refer to the ModusToolbox user guide to get the correct
+# variable name for the toolchain used in your build.
 #
 # The default depends on the selected TOOLCHAIN (GCC_ARM uses the ModusToolbox
 # software provided compiler by default).
-CY_COMPILER_PATH=
+CY_COMPILER_GCC_ARM_DIR=
 
 
 # Locate ModusToolbox helper tools folders in default installation
